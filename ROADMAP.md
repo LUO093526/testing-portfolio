@@ -33,33 +33,28 @@
 - ❌ 跳过 Python基础（你已经在用了）
 - ❌ 跳过 JMeter入门（你已装好，学过线程组/断言/参数化/关联）
 - ✅ 重点：unittest→pytest迁移、API测试深度、CI/CD、GitHub作品集
-────┼────┼────┼────┼────┼────┼────────────
- 基础 │ 自动化 │ 性能  │ 项目 │ 简历 │ 海投
- Python│ pytest │ JMeter│ 作品集│ 面试 │ 面试
- 接口  │ CI/CD  │ Linux │ 报告  │ 准备 │
-```
 
 ---
 
-## 📅 第一阶段：基础夯实（6月-7月中旬，6周）
+## 📅 第一阶段：pytest迁移 + 基础补充（现在-7月初，4周）
 
-### Python 测试脚本能力
-- [ ] Python 基础：列表/字典/函数/异常处理
-- [ ] requests 库：GET/POST/PUT/DELETE，header，token，json body
-- [ ] JSON 解析和断言
-- [ ] 用 Python 写 20 个接口测试脚本
+### 你已有的（不用学）
+- [x] Python 基础 ✅
+- [x] unittest 框架 ✅
+- [x] Selenium Web自动化 ✅
+- [x] JMeter 入门 ✅
 
-### Linux 实操能力
-- [ ] 用 Linux 搭一套测试环境：Nginx + MySQL + Flask 应用
-- [ ] 配置 systemd 管理服务
-- [ ] 查看日志：journalctl, tail, grep
-- [ ] 写 Shell 脚本自动化环境部署
+### 要做的
+- [ ] unittest → pytest 迁移：把 page_login_unittest.py 改写为 pytest
+- [ ] 给 Flask API 写 20+ 条 pytest 用例（目前16条，加4条）
+- [ ] Git 每日提交（保持绿点）
+- [ ] 敲完 Linux L01-L04 练习
 
-**检验标准：** 能独立用 Python 调通任意 REST API 并写断言
+**检验标准：** 能用 pytest 独立写接口测试，GitHub 提交 20+ 次
 
 ---
 
-## 📅 第二阶段：自动化测试（7月中旬-9月，6周）
+## 📅 第二阶段：API测试深度 + JMeter深入（7-8月，暑假8周）
 
 ### pytest 测试框架
 - [ ] fixture/conftest/parametrize/mark
@@ -67,56 +62,40 @@
 - [ ] 数据驱动测试（用 Excel/JSON 做测试数据）
 - [ ] 写 50+ 条自动化用例（覆盖你现在这个 Flask 项目）
 
-### CI/CD 基础
-- [ ] Git 工作流（commit/pr/merge）
-- [ ] GitHub Actions：push 自动跑测试
-- [ ] Jenkins 基础：拉代码→跑测试→发报告
-
-**检验标准：** GitHub 上有项目，push 代码自动跑测试并生成报告
-
----
-
-## 📅 第三阶段：性能测试深入（9月-10月，4周）
-
 ### JMeter 进阶
 - [ ] 参数化：CSV 数据驱动
 - [ ] 断言：响应断言 + JSON 断言
 - [ ] 混合场景设计：读多写少
 - [ ] 看懂聚合报告：Avg/90%Line/Throughput/Error%
+- [ ] 写一份正式的压测报告
 
-### 性能分析
-- [ ] Linux 服务器监控：top/htop/iostat/netstat
-- [ ] 定位瓶颈：CPU 高还是 I/O 高？
-- [ ] 写一份正式的压测报告（直接放简历里）
+### Linux 实操
+- [ ] 用 Linux 搭一套测试环境：Nginx + MySQL + Flask 应用
+- [ ] 配置 systemd 管理服务
+- [ ] 查看日志：journalctl, tail, grep
+- [ ] 写 Shell 脚本自动化环境部署
 
-**检验标准：** 能独立完成一个系统的压测并写出合格报告
-
----
-
-## 📅 第四阶段：项目作品集（10月-11月，4周）
-
-在 GitHub 上打造 2 个作品：
-
-### 作品1：API 自动化测试项目（你现在这个）
-```
-testing-portfolio/
-├── api/              ← Flask REST API（被测系统）
-├── tests/            ← pytest 自动化用例 50+
-├── jmeter/           ← JMeter 压测脚本
-├── reports/          ← 测试报告 HTML/PDF
-└── .github/workflows ← CI 自动运行测试
-```
-
-### 作品2：实战项目随便挑一个
-- 对 XX 开源项目写测试（如 RuoYi / 若依）
-- 或者拿学校系统/校园 App 写接口测试
-- 或者用 Postman 导出一套 Collection + 环境变量
-
-**关键：README 写清楚你怎么测的、找到什么 bug、压测结论**
+**检验标准：** GitHub 上有项目，push 代码自动跑测试并生成报告
 
 ---
 
-## 📅 第五阶段：简历+面试（11月-12月）
+## 📅 第三阶段：CI/CD + 作品集完善（9-10月，开学后）
+
+### CI/CD
+- [ ] GitHub Actions：push 自动跑 pytest
+- [ ] allure 测试报告自动生成
+- [ ] 了解 Jenkins 基础概念
+
+### 作品集
+- [ ] testing-portfolio 完善到 50+ 用例
+- [ ] 写 2 份正式压测报告（PDF）
+- [ ] README 写清楚：怎么测、测了什么、发现什么问题
+
+**检验标准：** GitHub 项目有 CI badge，README 有截图，测试报告可查
+
+---
+
+## 📅 第四阶段：简历+面试（11月-12月）
 
 ### 简历关键词（根据你实际学会的勾选）
 ```
@@ -157,7 +136,7 @@ testing-portfolio/
 
 ## ⚠️ 别踩的坑
 
-1. ❌ 不要学太多框架（只学 pytest，别碰 unittest/TestNG）
+1. ❌ 不要学太多框架（学 pytest 就够了，你的 unittest 经验已够用）
 2. ❌ 不要追求"全栈"（别在简历写 React+Vue+Spring，测试岗不需要）
 3. ❌ 不要等"学完再投"（11月就开始投，面试是最好的学习）
 4. ✅ Python 往深学，面试必问：装饰器、生成器、上下文管理器
