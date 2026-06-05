@@ -99,6 +99,42 @@ class TestCreateStudent:
         r = requests.post(f"{BASE_URL}/api/students")
         assert r.status_code == 400
 
+    def test_create_negative_grade(self, api):
+        """grade传入负数应正常创建"""
+        r = requests.post(
+            f"{BASE_URL}/api/students",
+            json={"name": "测试负数年级", "grade": "-1", "score": 80},
+        )
+        assert r.status_code == 201
+        assert r.json()["data"]["grade"] == "-1"
+        sid = r.json()["data"]["id"]
+        # 清理
+        requests.delete(f"{BASE_URL}/api/students/{sid}")
+
+    def test_create_negative_score(self, api):
+        """score传入负数应正常创建"""
+        r = requests.post(
+            f"{BASE_URL}/api/students",
+            json={"name": "测试负分数", "grade": "2026", "score": -100},
+        )
+        assert r.status_code == 201
+        assert r.json()["data"]["score"] == -100
+        sid = r.json()["data"]["id"]
+        # 清理
+        requests.delete(f"{BASE_URL}/api/students/{sid}")
+
+    def test_create_empty_name(self, api):
+        """name为空字符串应正常创建"""
+        r = requests.post(
+            f"{BASE_URL}/api/students",
+            json={"name": "", "grade": "2026", "score": 80},
+        )
+        assert r.status_code == 201
+        assert r.json()["data"]["name"] == ""
+        sid = r.json()["data"]["id"]
+        # 清理
+        requests.delete(f"{BASE_URL}/api/students/{sid}")
+
 
 @pytest.mark.crud
 class TestGetStudent:
@@ -132,6 +168,12 @@ class TestUpdateStudent:
             json={"score": 100},
         )
         assert r.status_code == 404
+
+    def test_update_empty_body(self, api, sample_student):
+        """更新时body为空应返回 400"""
+        r = requests.put(f"{BASE_URL}/api/students/{sample_student}")
+        assert r.status_code == 400
+        assert "error" in r.json()
 
 
 @pytest.mark.crud
