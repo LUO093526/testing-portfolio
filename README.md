@@ -1,5 +1,7 @@
  # 学员管理系统 API 自动化测试
 
+ ![API Tests](https://github.com/LUO093526/testing-portfolio/actions/workflows/test.yml/badge.svg)
+
   ## 技术栈
   - Python 3.10 + Flask 3.x
   - pytest 9.0 + requests
