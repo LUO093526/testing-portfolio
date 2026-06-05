@@ -1,0 +1,40 @@
+name: API Tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 启动 API 服务
+        run: |
+          cd api
+          python app.py &
+          sleep 3
+          curl http://127.0.0.1:5000/api/health
+
+      - name: 运行全部测试
+        run: pytest tests/test_api.py -v --html=reports/report.html --self-contained-html
+
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: reports/report.html
