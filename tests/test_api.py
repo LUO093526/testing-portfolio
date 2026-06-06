@@ -88,20 +88,17 @@ class TestCreateStudent:
         # 清理
         requests.delete(f"{BASE_URL}/api/students/{sid}")
 
-    @pytest.mark.exception
     def test_create_missing_name(self, api):
         """缺少必填字段应返回 400"""
         r = requests.post(f"{BASE_URL}/api/students", json={"grade": "2026"})
         assert r.status_code == 400
         assert "error" in r.json()
 
-    @pytest.mark.exception
     def test_create_empty_body(self, api):
         """空请求体应返回 400"""
         r = requests.post(f"{BASE_URL}/api/students")
         assert r.status_code == 400
 
-    @pytest.mark.boundary
     def test_create_negative_grade(self, api):
         """grade传入负数应正常创建"""
         r = requests.post(
@@ -114,7 +111,6 @@ class TestCreateStudent:
         # 清理
         requests.delete(f"{BASE_URL}/api/students/{sid}")
 
-    @pytest.mark.boundary
     def test_create_negative_score(self, api):
         """score传入负数应正常创建"""
         r = requests.post(
@@ -127,7 +123,6 @@ class TestCreateStudent:
         # 清理
         requests.delete(f"{BASE_URL}/api/students/{sid}")
 
-    @pytest.mark.boundary
     def test_create_empty_name(self, api):
         """name为空字符串应正常创建"""
         r = requests.post(
@@ -149,7 +144,6 @@ class TestGetStudent:
         assert r.status_code == 200
         assert r.json()["data"]["name"] == "测试学生"
 
-    @pytest.mark.exception
     def test_get_nonexistent(self, api):
         """获取不存在的学生应返回 404"""
         r = requests.get(f"{BASE_URL}/api/students/99999")
@@ -167,7 +161,6 @@ class TestUpdateStudent:
         assert r.status_code == 200
         assert r.json()["data"]["score"] == 100
 
-    @pytest.mark.exception
     def test_update_nonexistent(self, api):
         """更新不存在的学生应返回 404"""
         r = requests.put(
@@ -176,7 +169,6 @@ class TestUpdateStudent:
         )
         assert r.status_code == 404
 
-    @pytest.mark.exception
     def test_update_empty_body(self, api, sample_student):
         """更新时body为空应返回 400"""
         r = requests.put(f"{BASE_URL}/api/students/{sample_student}")
@@ -199,7 +191,6 @@ class TestDeleteStudent:
         r = requests.get(f"{BASE_URL}/api/students/{sid}")
         assert r.status_code == 404
 
-    @pytest.mark.exception
     def test_delete_nonexistent(self, api):
         """删除不存在学生应返回 404"""
         r = requests.delete(f"{BASE_URL}/api/students/99999")
@@ -211,7 +202,6 @@ class TestDeleteStudent:
 class TestDataValidation:
     """接口文档里没写的，也要测"""
 
-    @pytest.mark.boundary
     def test_score_default_zero(self, api):
         """不传 score 时默认为 0"""
         r = requests.post(
@@ -223,7 +213,6 @@ class TestDataValidation:
         assert r.json()["data"]["score"] == 0
         requests.delete(f"{BASE_URL}/api/students/{sid}")
 
-    @pytest.mark.exception
     def test_special_characters_in_name(self, api):
         """特殊字符处理"""
         r = requests.post(
