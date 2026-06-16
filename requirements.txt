@@ -2,3 +2,6 @@ flask>=3.0
 pytest>=9.0
 requests>=2.31
 pytest-html>=4.2
+# Selenium Web UI 测试（可选，仅在本地运行时需要）
+# selenium>=4.28
+# ddddocr>=1.5

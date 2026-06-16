@@ -29,8 +29,8 @@ jobs:
           sleep 3
           curl http://127.0.0.1:5000/api/health
 
-      - name: 运行全部测试
-        run: pytest tests/test_api.py -v --html=reports/report.html --self-contained-html
+      - name: 运行全部测试（跳过Selenium，需要浏览器环境）
+        run: pytest tests/ -v -m "not selenium" --html=reports/report.html --self-contained-html
 
       - name: 上传测试报告
         if: always()

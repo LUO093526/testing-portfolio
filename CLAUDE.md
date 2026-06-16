@@ -1,3 +1,24 @@
+# testing-portfolio — 测试工程师学习项目
+
+> 12周学习计划 | 6/3-8/23 | [`LEARNING-PLAN.md`](./LEARNING-PLAN.md) | [`PROGRESS.md`](./PROGRESS.md)
+
+## 项目上下文
+- **项目：** 简易用户管理 API 测试平台（Flask + pytest + JMeter + CI/CD）
+- **用户：** 大二软件技术，2026年底实习，目标是初级测试工程师
+- **当前进度：** 第2周第1天（6/8周一），等价类深入
+- **关键原则：** AI辅助但不替代思考；所有产出落地到本项目；每天 commit
+
+## 高频操作
+```bash
+./run.sh start          # 启动 Flask API
+pytest tests/ -v        # 跑全部测试
+pytest -m smoke         # 只跑冒烟
+./run.sh stop           # 停止服务
+git log --oneline       # 查看提交历史
+```
+
+---
+
 # 技能自动触发规则 — 全 54 技能分类
 
 > 匹配到触发条件时，**必须先调用 Skill 工具**，再给文字回答。
