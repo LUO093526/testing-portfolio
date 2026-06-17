@@ -9,19 +9,8 @@
 import pytest
 
 
-# ── Fixtures ──────────────────────────────────────────────
-
-@pytest.fixture
-def sample_student(api, api_client, valid_student):
-    """创建一个测试用学生，测试完自动清理"""
-    r = api_client.post("/api/students", json=valid_student)
-    assert r.status_code == 201
-    sid = r.json()["data"]["id"]
-    yield sid
-    api_client.delete(f"/api/students/{sid}")
-
-
 # ── 冒烟测试（快速验证核心功能是否可用）────────────────────
+# 注：sample_student fixture 已迁移到 conftest.py（第3周Day3重构）
 
 @pytest.mark.smoke
 class TestHealthCheck:
