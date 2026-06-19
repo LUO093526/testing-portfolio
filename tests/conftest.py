@@ -448,3 +448,34 @@ def api(api_session, base_url):
 #   正确的依赖方向（scope 规则）:
 #     窄 scope 可以依赖宽 scope ✅  (function 依赖 session)
 #     宽 scope 不能依赖窄 scope ❌  (session 不能依赖 function)
+
+
+# ═══════════════════════════════════════════════════════════
+# 9. Selenium Web UI 配置（第3周Day5：Selenium pytest重构）
+# ═══════════════════════════════════════════════════════════
+
+@pytest.fixture(scope="session")
+def selenium_config():
+    """Selenium Web UI 测试的集中配置（第3周Day5新增）
+
+    所有 Web 测试通过此 fixture 引用配置，不再硬编码。
+    包括：目标URL、测试账号、浏览器路径等。
+    """
+    return {
+        "login_url": "http://124.223.155.95:8088/home/login/login.html",
+        "valid_username": "18062031483",
+        "valid_password": "mfm543200",
+        "chromium_path": "/home/luo/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome",
+        "chromedriver_path": "/home/luo/.local/bin/chromedriver",
+        "captcha_retry": 10,
+        "accounts": [
+            {"username": "18062031483", "password": "mfm543200", "desc": "主账号"},
+            # 可扩展更多测试账号
+        ],
+        "invalid_accounts": [
+            {"username": "wrong_user_123", "password": "mfm543200", "desc": "错误用户名"},
+            {"username": "18062031483", "password": "wrongpassword", "desc": "错误密码"},
+            {"username": "", "password": "mfm543200", "desc": "空用户名"},
+            {"username": "18062031483", "password": "", "desc": "空密码"},
+        ],
+    }

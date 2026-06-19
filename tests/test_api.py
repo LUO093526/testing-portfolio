@@ -349,3 +349,191 @@ class TestConcurrency:
         r = api_client.get("/api/students?name=批量")
         for s in r.json()["data"]:
             api_client.delete(f"/api/students/{s['id']}")
+
+
+# ── 第3周Day4：状态机测试 ─────────────────────────────────
+
+class TestTokenStateMachine:
+    """Token 生命周期状态机测试
+    状态流转: 未登录 → 已登录(token有效) → 已注销(token无效)
+    """
+
+    def test_token_full_lifecycle(self, api, api_client):
+        """状态机：登录→验证有效→注销→验证无效
+        完整走一遍 token 从创建到销毁的状态流转
+        """
+        # 状态1: 未登录 → 登录，获取 token
+        r = api_client.post(
+            "/api/login",
+            json={"username": "admin", "password": "admin123"},
+        )
+        assert r.status_code == 200
+        token = r.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # 状态2: token有效 → /api/me 应返回200
+        r = api_client.get("/api/me", headers=headers)
+        assert r.status_code == 200
+        assert r.json()["message"] == "token 有效"
+
+        # 状态3: 注销 → token 应失效
+        r = api_client.post("/api/logout", headers=headers)
+        assert r.status_code == 200
+        assert "已注销" in r.json()["message"]
+
+        # 状态4: token无效 → /api/me 应返回401
+        r = api_client.get("/api/me", headers=headers)
+        assert r.status_code == 401
+        assert "token 无效" in r.json()["error"]
+
+    @pytest.mark.exception
+    def test_forged_token_rejected(self, api, api_client):
+        """异常：伪造 token 应被拒绝"""
+        headers = {"Authorization": "Bearer fake_token_never_existed_12345"}
+        r = api_client.get("/api/me", headers=headers)
+        assert r.status_code == 401
+        assert "token 无效" in r.json()["error"]
+
+    @pytest.mark.exception
+    def test_missing_auth_header(self, api, api_client):
+        """异常：不带 Authorization 头访问鉴权接口"""
+        r = api_client.get("/api/me")
+        assert r.status_code == 401
+        assert "未提供 token" in r.json()["error"]
+
+
+class TestStudentStateMachine:
+    """Student 生命周期状态机测试
+    状态流转: 不存在 → 已创建 → 已修改 → 已删除(不存在)
+    """
+
+    def test_student_full_lifecycle(self, api, api_client):
+        """状态机：创建→查询→更新→再查询→删除→确认不存在
+        覆盖学生从生到死的完整状态流转
+        """
+        # 状态1: 创建学生 → 应返回201+id
+        r = api_client.post(
+            "/api/students",
+            json={"name": "状态机测试", "grade": "2026", "score": 75},
+        )
+        assert r.status_code == 201
+        sid = r.json()["data"]["id"]
+        assert sid > 0
+
+        # 状态2: 查询刚创建的学生 → 应存在且数据完整
+        r = api_client.get(f"/api/students/{sid}")
+        assert r.status_code == 200
+        data = r.json()["data"]
+        assert data["name"] == "状态机测试"
+        assert data["grade"] == "2026"
+        assert data["score"] == 75
+
+        # 状态3: 更新 → 数据应变更
+        r = api_client.put(
+            f"/api/students/{sid}",
+            json={"score": 95, "grade": "2025"},
+        )
+        assert r.status_code == 200
+        assert r.json()["data"]["score"] == 95
+        assert r.json()["data"]["grade"] == "2025"
+
+        # 状态4: 再次查询 → 确认更新后数据
+        r = api_client.get(f"/api/students/{sid}")
+        assert r.status_code == 200
+        assert r.json()["data"]["score"] == 95
+
+        # 状态5: 删除 → 应成功
+        r = api_client.delete(f"/api/students/{sid}")
+        assert r.status_code == 200
+
+        # 状态6: 删除后再次查询 → 应404
+        r = api_client.get(f"/api/students/{sid}")
+        assert r.status_code == 404
+
+    @pytest.mark.exception
+    def test_idempotent_delete(self, api, api_client):
+        """异常：幂等删除 — 删除同一学生两次，第二次应404"""
+        # 创建
+        r = api_client.post(
+            "/api/students",
+            json={"name": "幂等测试", "grade": "2026"},
+        )
+        assert r.status_code == 201
+        sid = r.json()["data"]["id"]
+
+        # 第一次删除 → 成功
+        r = api_client.delete(f"/api/students/{sid}")
+        assert r.status_code == 200
+
+        # 第二次删除 → 应404（已不存在）
+        r = api_client.delete(f"/api/students/{sid}")
+        assert r.status_code == 404
+
+    @pytest.mark.slow
+    def test_concurrent_update_race(self, api, api_client):
+        """并发：对同一学生连续快速更新 → 最后一次更新应生效"""
+        # 创建
+        r = api_client.post(
+            "/api/students",
+            json={"name": "并发更新测试", "grade": "2026", "score": 50},
+        )
+        assert r.status_code == 201
+        sid = r.json()["data"]["id"]
+
+        # 快速连续更新3次（模拟并发写入）
+        for score in [60, 70, 80]:
+            r = api_client.put(
+                f"/api/students/{sid}",
+                json={"score": score},
+            )
+            assert r.status_code == 200
+
+        # 最终查询 → 最后一次更新应生效（score=80）
+        r = api_client.get(f"/api/students/{sid}")
+        assert r.status_code == 200
+        assert r.json()["data"]["score"] == 80
+
+        # 清理
+        api_client.delete(f"/api/students/{sid}")
+
+
+class TestResponseSchema:
+    """响应结构验证 — 确保各接口返回格式一致"""
+
+    def test_health_schema(self, api, api_client):
+        """健康检查响应结构"""
+        r = api_client.get("/api/health")
+        assert r.status_code == 200
+        body = r.json()
+        assert "status" in body
+        assert body["status"] == "ok"
+
+    def test_login_success_schema(self, api, api_client):
+        """登录成功响应结构"""
+        r = api_client.post(
+            "/api/login",
+            json={"username": "admin", "password": "admin123"},
+        )
+        assert r.status_code == 200
+        body = r.json()
+        assert "token" in body
+        assert "username" in body
+        assert len(body["token"]) == 32
+
+        # 清理：注销 token
+        api_client.post(
+            "/api/logout",
+            headers={"Authorization": f"Bearer {body['token']}"},
+        )
+
+    def test_list_schema(self, api, api_client):
+        """列表响应结构：必须有 count 和 data 字段"""
+        r = api_client.get("/api/students")
+        assert r.status_code == 200
+        body = r.json()
+        assert "count" in body
+        assert "data" in body
+        assert isinstance(body["count"], int)
+        assert isinstance(body["data"], list)
+        # count 应与 data 长度一致
+        assert body["count"] == len(body["data"])

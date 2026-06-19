@@ -1,30 +1,23 @@
-"""pytest 迁移版本 - 登录功能自动化测试
+"""Selenium pytest 重构版 — 登录功能 UI 自动化测试
+第3周Day5：接入 conftest fixture + parametrize 参数化
 
-## 从 unittest 迁移的改动
-
-| unittest 写法 | pytest 写法 | 理由 |
-|--------------|------------|------|
-| `setUp(self)` / `tearDown(self)` | `@pytest.fixture(scope="class")` | 复用 driver，节省启动时间 |
-| `self.assertEqual(...)` | `assert ...` | pytest 自带详细断言输出 |
-| `input("按任意键继续")` | 删掉 | 自动化测试不需要交互 |
-| 硬编码 `E:\chromedriver.exe` | Selenium 4.x 自动管理 | 跨平台不依赖路径 |
-| 无测试标记 | `@pytest.mark.selenium` | 可按需跳过 `-m "not selenium"` |
-| 裸 `except: pass` | 记录日志 | 方便排查问题 |
+## 重构改动（vs 原版）
+| 原版 | 重构后 | 理由 |
+|------|--------|------|
+| 硬编码 LOGIN_URL / VALID_USERNAME 等 | selenium_config fixture（conftest.py） | 集中管理配置 |
+| 硬编码 CHROMIUM_PATH / CHROMEDRIVER_PATH | selenium_config["chromium_path"] | 路径变更只改一处 |
+| test_login_success 单个账号 | @parametrize 多账号驱动 | 一次写，多组数据跑 |
+| test_login_wrong_username 单个错用户名 | @parametrize 多组错误数据 | 用例瘦身 |
+| @pytest.mark.selenium | 同时保留 @pytest.mark.selenium + @pytest.mark.web | 兼容两种运行方式 |
 
 ## 运行方式
-
 ```bash
-# 跑所有登录测试
-pytest tests/test_login_pytest.py -v
-
-# 跑但显示 print 输出
-pytest tests/test_login_pytest.py -v -s
-
-# 跳过 selenium（仅 API 测试）
-pytest -m "not selenium"
-
-# 生成 HTML 报告
-pytest tests/test_login_pytest.py --html=reports/login_report.html
+pytest tests/test_login_pytest.py -v                # 跑全部 Web 测试
+pytest tests/test_login_pytest.py -v -k "success"   # 只看成功场景
+pytest tests/test_login_pytest.py -v -k "wrong"     # 只看失败场景
+pytest -m web                                        # 只跑 Web UI 测试
+pytest -m "selenium or web"                          # 两种标记都跑
+pytest -m "not (selenium or web)"                    # 跳过 Web 测试（仅 API）
 ```
 """
 
@@ -41,17 +34,8 @@ import ddddocr
 
 logger = logging.getLogger(__name__)
 
-# ── 常量 ─────────────────────────────────────────
-LOGIN_URL = "http://124.223.155.95:8088/home/login/login.html"
-VALID_USERNAME = "18062031483"
-VALID_PASSWORD = "mfm543200"
-CAPTCHA_RETRY = 10  # 验证码最多重试次数
 
-# Chromium 路径（Playwright 安装的）
-CHROMIUM_PATH = "/home/luo/.cache/ms-playwright/chromium-1223/chrome-linux64/chrome"
-# Chromedriver 路径（从 npmmirror 下载）
-CHROMEDRIVER_PATH = "/home/luo/.local/bin/chromedriver"
-
+# ── 辅助函数 ────────────────────────────────────────
 
 def _recognize_captcha(ocr: ddddocr.DdddOcr, driver) -> str:
     """识别验证码图片，返回识别的文本"""
@@ -78,17 +62,17 @@ def _fill_captcha(driver, ocr: ddddocr.DdddOcr) -> None:
     time.sleep(1)
 
 
-# ── Fixtures ─────────────────────────────────────
+# ── Fixtures（使用 conftest selenium_config）──────
 
 @pytest.fixture(scope="class")
-def driver():
-    """创建 Chrome WebDriver，测试类结束后自动退出
+def driver(selenium_config):
+    """创建 Chrome WebDriver（从 conftest 读取浏览器路径）
 
-    scope="class" = 整个测试类共用一个浏览器实例（等价于原 setUp/tearDown 的类级别效果）
+    scope="class" = 整个测试类共用一个浏览器实例。
     如果 Chrome/chromedriver 不可用，自动 skip 相关测试。
     """
     options = Options()
-    options.binary_location = CHROMIUM_PATH
+    options.binary_location = selenium_config["chromium_path"]
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -96,61 +80,65 @@ def driver():
     options.add_argument("window-size=1920,1080")
 
     try:
-        service = Service(executable_path=CHROMEDRIVER_PATH)
+        service = Service(executable_path=selenium_config["chromedriver_path"])
         driver = webdriver.Chrome(service=service, options=options)
     except Exception as e:
         pytest.skip(f"浏览器不可用: {e}")
 
-    logger.info("浏览器已启动")
+    logger.info("浏览器已启动 (chromium: %s)", selenium_config["chromium_path"])
 
-    yield driver  # ← 这里返回给测试方法
+    yield driver
 
-    # teardown：测试类结束后执行
     driver.quit()
     logger.info("浏览器已关闭")
 
 
 @pytest.fixture(scope="class")
-def logged_in_driver(driver):
-    """登录后的 driver（给后续需要登录态的测试用）"""
-    driver.get(LOGIN_URL)
+def logged_in_driver(driver, selenium_config):
+    """登录后的 driver（给后续需要登录态的测试用）
+
+    使用 selenium_config 中的主账号自动登录。
+    """
+    login_url = selenium_config["login_url"]
+    username = selenium_config["valid_username"]
+    password = selenium_config["valid_password"]
+    captcha_retry = selenium_config["captcha_retry"]
+
+    driver.get(login_url)
     driver.maximize_window()
     time.sleep(2)
 
-    # 定位用户名和密码
+    # 填入用户名密码
     user = WebDriverWait(driver, 10, 1).until(
         lambda x: x.find_element(By.ID, "member_name")
     )
-    user.send_keys(VALID_USERNAME)
+    user.send_keys(username)
 
     pwd = WebDriverWait(driver, 10, 1).until(
         lambda x: x.find_element(By.ID, "member_password")
     )
-    pwd.send_keys(VALID_PASSWORD)
+    pwd.send_keys(password)
 
     # 验证码识别重试
     ocr = ddddocr.DdddOcr()
-    for attempt in range(CAPTCHA_RETRY):
+    for attempt in range(captcha_retry):
         _fill_captcha(driver, ocr)
 
-        # Tab 切换到登录按钮
         code_input = driver.find_element(By.ID, "captcha_normal")
         code_input.send_keys(Keys.TAB)
         time.sleep(1)
 
-        # 点击登录
         login_btn = driver.find_element(
             By.XPATH, '//*[@id="login_normal_form"]/div[5]/input[2]'
         )
         login_btn.click()
         time.sleep(3)
 
-        # 检查是否登录成功
         try:
             account = driver.find_element(
                 By.XPATH, "/html/body/div[8]/div/div[2]/div[2]/div[1]/div[1]/div[4]/div"
             )
-            if account.text == VALID_USERNAME:
+            if account.text == username:
                 logger.info("登录成功 (第 %d 次尝试)", attempt + 1)
                 yield driver
                 return
@@ -158,43 +146,69 @@ def logged_in_driver(driver):
             logger.warning("第 %d 次验证码识别失败，重试...", attempt + 1)
             continue
 
-    pytest.fail(f"验证码重试 {CAPTCHA_RETRY} 次后仍未能登录成功")
+    pytest.fail(f"验证码重试 {captcha_retry} 次后仍未能登录成功")
 
 
-# ── 测试类 ───────────────────────────────────────
+# ── parametrize 数据 ────────────────────────────────
+
+LOGIN_SUCCESS_DATA = [
+    pytest.param(
+        "18062031483", "mfm543200",
+        id="主账号-正常登录",
+    ),
+    # 可扩展更多有效账号对
+]
+
+LOGIN_FAILURE_DATA = [
+    pytest.param(
+        "wrong_user_123", "mfm543200", "错误用户名+正确密码",
+        id="异常-错误用户名",
+    ),
+    pytest.param(
+        "18062031483", "wrongpassword", "正确用户名+错误密码",
+        id="异常-错误密码",
+    ),
+    pytest.param(
+        "", "mfm543200", "空用户名+正确密码",
+        id="边界-空用户名",
+    ),
+    pytest.param(
+        "18062031483", "", "正确用户名+空密码",
+        id="边界-空密码",
+    ),
+]
+
+
+# ── 测试类：正向登录（parametrize）──────────────
 
 @pytest.mark.selenium
-class TestLogin:
-    """登录功能自动化测试（pytest 版本）
+@pytest.mark.web
+class TestLoginSuccess:
+    """正向登录测试 — parametrize 驱动多账号"""
 
-    对比原 unittest 版本改进点：
-    1. setUp/tearDown → fixture（driver 复用）
-    2. print → logger（可控输出）
-    3. 验证码识别提取为独立函数
-    4. assert 替代 bare if/print
-    """
+    @pytest.mark.parametrize("username,password", LOGIN_SUCCESS_DATA)
+    def test_login_success_parametrize(self, driver, selenium_config, username, password):
+        """parametrize: 多组有效账号登录验证"""
+        captcha_retry = selenium_config["captcha_retry"]
 
-    def test_login_success(self, driver):
-        """正向：正确用户名+密码+验证码，登录成功"""
-        driver.get(LOGIN_URL)
+        driver.get(selenium_config["login_url"])
         driver.maximize_window()
         time.sleep(2)
 
-        # 输入用户名
+        # 填入用户名密码
         user = WebDriverWait(driver, 10, 1).until(
             lambda x: x.find_element(By.ID, "member_name")
         )
-        user.send_keys(VALID_USERNAME)
+        user.send_keys(username)
 
-        # 输入密码
         pwd = WebDriverWait(driver, 10, 1).until(
             lambda x: x.find_element(By.ID, "member_password")
         )
-        pwd.send_keys(VALID_PASSWORD)
+        pwd.send_keys(password)
 
         ocr = ddddocr.DdddOcr()
         login_success = False
-        for i in range(CAPTCHA_RETRY):
+        for i in range(captcha_retry):
             _fill_captcha(driver, ocr)
 
             code_input = driver.find_element(By.ID, "captcha_normal")
@@ -211,7 +225,7 @@ class TestLogin:
                 account = driver.find_element(
                     By.XPATH, "/html/body/div[8]/div/div[2]/div[2]/div[1]/div[1]/div[4]/div"
                 )
-                if account.text == VALID_USERNAME:
+                if account.text == username:
                     login_success = True
                     logger.info("登录成功 (第 %d 次验证码尝试)", i + 1)
                     break
@@ -219,29 +233,43 @@ class TestLogin:
                 logger.warning("第 %d 次验证码错误，重试中...", i + 1)
                 continue
 
-        assert login_success, f"验证码重试 {CAPTCHA_RETRY} 次后仍未登录成功"
+        assert login_success, (
+            f"验证码重试 {captcha_retry} 次后仍未登录成功 "
+            f"(user={username})"
+        )
 
-    def test_login_wrong_username(self, driver):
-        """反向：错误用户名，正确密码，预期登录失败"""
-        driver.get(LOGIN_URL)
+
+# ── 测试类：反向登录（parametrize）───────────────
+
+@pytest.mark.selenium
+@pytest.mark.web
+class TestLoginFailure:
+    """反向登录测试 — parametrize 驱动多组错误数据"""
+
+    @pytest.mark.parametrize("username,password,desc", LOGIN_FAILURE_DATA)
+    def test_login_failure_parametrize(
+        self, driver, selenium_config, username, password, desc
+    ):
+        """parametrize: 多组错误凭证验证登录失败"""
+        captcha_retry = selenium_config["captcha_retry"]
+
+        driver.get(selenium_config["login_url"])
         driver.maximize_window()
         time.sleep(2)
 
-        # 错误的用户名
         user = WebDriverWait(driver, 10, 1).until(
             lambda x: x.find_element(By.ID, "member_name")
         )
-        user.send_keys("wrong_user_123")
+        user.send_keys(username)
 
-        # 正确的密码
         pwd = WebDriverWait(driver, 10, 1).until(
             lambda x: x.find_element(By.ID, "member_password")
         )
-        pwd.send_keys(VALID_PASSWORD)
+        pwd.send_keys(password)
 
         ocr = ddddocr.DdddOcr()
         login_failed = False
-        for i in range(CAPTCHA_RETRY):
+        for i in range(captcha_retry):
             _fill_captcha(driver, ocr)
 
             code_input = driver.find_element(By.ID, "captcha_normal")
@@ -260,25 +288,40 @@ class TestLogin:
                 )
                 if error_elem.text == "登录失败":
                     login_failed = True
-                    logger.info("检测到登录失败提示 (符合预期)")
+                    logger.info("检测到登录失败提示 (符合预期: %s)", desc)
                     break
             except Exception:
                 logger.warning("第 %d 次未检测到错误提示，重试中...", i + 1)
                 continue
 
-        assert login_failed, f"验证码重试 {CAPTCHA_RETRY} 次后仍未出现预期的登录失败提示"
+        assert login_failed, (
+            f"[{desc}] 验证码重试 {captcha_retry} 次后仍未出现预期的登录失败提示"
+        )
 
+
+# ── 测试类：登录后状态验证（fixture 依赖注入）───
 
 @pytest.mark.selenium
-class TestLoginWithFixture:
-    """使用 logged_in_driver 夹具 — 展示 fixture 依赖注入"""
+@pytest.mark.web
+class TestAfterLogin:
+    """登录后页面状态验证 — 使用 logged_in_driver fixture"""
 
-    def test_after_login_page_has_account(self, logged_in_driver):
+    def test_after_login_page_has_account(self, logged_in_driver, selenium_config):
         """登录成功后页面显示正确的账号"""
         driver = logged_in_driver
         account_elem = driver.find_element(
             By.XPATH, "/html/body/div[8]/div/div[2]/div[2]/div[1]/div[1]/div[4]/div"
         )
-        assert account_elem.text == VALID_USERNAME, (
-            f"期望账号 {VALID_USERNAME}，实际显示 {account_elem.text}"
+        expected = selenium_config["valid_username"]
+        assert account_elem.text == expected, (
+            f"期望账号 {expected}，实际显示 {account_elem.text}"
+        )
+
+    def test_after_login_url_changed(self, logged_in_driver, selenium_config):
+        """登录成功后 URL 应跳转（不再停留在登录页）"""
+        driver = logged_in_driver
+        current_url = driver.current_url
+        login_url = selenium_config["login_url"]
+        assert current_url != login_url, (
+            f"登录后 URL 应变化，但仍停留在 {current_url}"
         )
