@@ -66,8 +66,8 @@
 | 1 | 6/15 周一 | fixture高级用法 | scope四级、yield/teardown | 多级Scope代码 | `64e601b` | ✅ |
 | 2 | 6/16 周二 | parametrize参数化 | 数据驱动、批量测试数据 | 参数化自动化用例 | `acc5f72` | ✅ |
 | 3 | 6/17 周三 | conftest.py重构 | 公共逻辑抽离、依赖链 | 优化后conftest.py | `e625a65` | ✅ |
-| 4 | 6/18 周四 | 用例扩充 30→35 | 异常场景、状态机测试 | Token/Student状态机+响应Schema | `TBD` | ✅ |
-| 5 | 6/19 周五 | Selenium pytest重构 | UI自动化+Pytest | Web脚本+conftest+parametrize | `TBD` | ✅ |
+| 4 | 6/18 周四 | 用例扩充 30→35 | 异常场景、状态机测试 | Token/Student状态机+响应Schema | `f17be02` | ✅ |
+| 5 | 6/19 周五 | Selenium pytest重构 | UI自动化+Pytest | Web脚本+conftest+parametrize | `f17be02` | ✅ |
 | 6 | 6/20 周六 | 查漏补缺 | 代码规范、知识点复盘 | 完整项目源码 | — | ⬜ |
 | 7 | 6/21 周日 | 休息 | — | — | — | ⬜ |
 
