@@ -79,9 +79,9 @@
 
 | 天 | 日期 | 主题 | 核心知识点 | 产出物 | Commit | 状态 |
 |----|------|------|-----------|--------|--------|------|
-| 1 | 6/22 周一 | ~~文件/权限~~ → Nginx+Flask 提前 | 🔓 已学校实训掌握（useradd/chmod/chown/group 10实训） | 跳过基础，直入部署 | — | 🔓 |
+| 1 | 6/22 周一 | Nginx+Flask 部署 | Nginx 安装、反向代理、proxy_pass | `docs/deployment-guide.md` + `docs/nginx-flask.conf` | — | ✅ |
 | 2 | 6/23 周二 | 进程/Shell | ps/top/kill、Shell基础 | 运维操作日志 | — | ⬜ |
-| 3 | 6/24 周三 | Nginx + Flask | Web部署、反向代理 | `docs/deployment-guide.md` | — | ⬜ |
+| 3 | 6/24 周三 | ~~Nginx+Flask~~ → 待定 | Day1 已完成部署，当天可深入 config 或弹性 | — | — | 🔓 |
 | 4 | 6/25 周四 | systemd 服务管理 | 系统服务、开机自启 | 自启配置文件 | — | ⬜ |
 | 5 | 6/26 周五 | 日志排查实战 | journalctl/tail/grep | 问题排查复盘 | — | ⬜ |
 | 6 | 6/27 周六 | 查漏补缺+月总结 | Linux全套命令复盘 | 项目部署手册 | — | ⬜ |
@@ -157,15 +157,15 @@
 ## 🔔 今日状态
 
 ```
-📅 2026年6月20日（周六）— 第3周第6天 ✅ 本周完成！
-✅ Day6 查漏补缺 — 全量测试 82/87 PASSED（5条Selenium外部依赖失败）
-✅ 第3周总结已写 — notes/week3-summary.md（含面试模拟问答）
-✅ 达标总则全部通过：fixture 4级scope | parametrize | 依赖链 | 87用例 | Selenium重构
-📝 第1周✅ | 第2周✅ | 第3周✅ 完成！
-📅 下周：第4周 Linux实操（6/22-28）— Nginx+Flask部署
+📅 2026年6月22日（周一）— 第4周第1天 ✅
+✅ Day1 Nginx+Flask 部署 — 反向代理配置完成，全量39 PASSED
+✅ 产出：docs/deployment-guide.md | docs/nginx-flask.conf
+✅ 验证：curl 经 Nginx(:80) → Flask(:5000) 全部接口正常
+📝 第1周✅ | 第2周✅ | 第3周✅ | 第4周进行中
+📅 明天：第4周 Day2 — 进程/Shell（ps/top/kill）
 ```
 
-> **连续15天打卡 🔥** | 第3周 100% ✅ | 87条API用例 | fixture依赖链 | 状态机测试 | 3周连续全绿
+> **连续16天打卡 🔥** | 第4周 14% | Nginx反向代理 ✅ | 部署文档 ✅
 
 ---
 
