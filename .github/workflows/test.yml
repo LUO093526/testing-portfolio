@@ -26,15 +26,23 @@ jobs:
         run: |
           cd api
           python app.py &
-          sleep 3
-          curl http://127.0.0.1:5000/api/health
+          # 轮询等待 API 就绪，最多等 15 秒
+          for i in $(seq 1 15); do
+            if curl -s http://127.0.0.1:5000/api/health > /dev/null 2>&1; then
+              echo "✅ API 已就绪 (${i}秒)"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "❌ API 启动超时"
+          exit 1
 
       - name: 运行全部测试（跳过Selenium，需要浏览器环境）
         run: pytest tests/ -v -m "not selenium" --html=reports/report.html --self-contained-html
 
       - name: 上传测试报告
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: test-report
           path: reports/report.html
