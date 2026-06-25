@@ -1,0 +1,42 @@
+# ============================================================
+# systemd 服务单元 — 学员管理 Flask API
+# 文件位置: /etc/systemd/system/flask-api.service
+# 第4周 Day4: systemd 服务管理
+# ============================================================
+
+[Unit]
+Description=学员管理 API 测试平台 (Flask)
+Documentation=https://github.com/luo/testing-portfolio
+After=network.target
+# Wants=nginx.service         # 若需与 Nginx 联动可取消注释
+
+[Service]
+Type=simple
+User=luo
+Group=luo
+WorkingDirectory=/home/luo/testing-portfolio/api
+ExecStart=/usr/bin/python3 /home/luo/testing-portfolio/api/app.py
+
+# 环境变量
+Environment=FLASK_ENV=production
+Environment=PYTHONUNBUFFERED=1
+
+# 重启策略
+Restart=on-failure
+RestartSec=3s
+
+# 限制重启频率（60秒内最多重启5次，超过则停止重启）
+StartLimitInterval=60s
+StartLimitBurst=5
+
+# 日志 → journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=flask-api
+
+# 安全加固（可选）
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
