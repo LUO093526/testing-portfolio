@@ -86,6 +86,12 @@ pytest --alluredir=allure-results && allure serve .   # Allure 报告
 
 > 用例间存在 marker 重叠（如某 CRUD 用例同时标记 smoke），合计 87 条以 pytest 收集为准。
 
+## 测试报告
+
+最新全量测试结果：**80 passed, 7 deselected**（7 个为需浏览器的 Selenium 用例，未计入本次运行）
+
+![pytest-html 测试报告](reports/report.png)
+
 ## 学习路线
 
 ```
