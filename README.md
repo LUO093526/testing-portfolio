@@ -41,7 +41,7 @@ testing-portfolio/
 ├── jmeter_script/          # JMeter 脚本 + 压测报告
 ├── reports/                # 测试报告
 ├── logs/                   # 运行日志
-├── notes/                  # 学习笔记
+├── learning/               # 学习计划/进度/笔记（过程文件）
 ├── .github/workflows/      # CI 配置
 └── README.md
 ```
@@ -99,7 +99,7 @@ pytest --alluredir=allure-results && allure serve .   # Allure 报告
 → 第5-6周 API深度 → 第7-8周 JMeter深入 → 第9-10周 CI/CD → 第11-12周 求职
 ```
 
-详见 [`LEARNING-PLAN.md`](./LEARNING-PLAN.md) 和 [`PROGRESS.md`](./PROGRESS.md)
+详见 [`learning/LEARNING-PLAN.md`](./learning/LEARNING-PLAN.md) 和 [`learning/PROGRESS.md`](./learning/PROGRESS.md)
 
 ## 关键指标
 

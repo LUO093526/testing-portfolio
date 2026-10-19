@@ -1,11 +1,11 @@
 # testing-portfolio — 测试工程师学习项目
 
-> 12周学习计划 | 6/3-8/23 | [`LEARNING-PLAN.md`](./LEARNING-PLAN.md) | [`PROGRESS.md`](./PROGRESS.md)
+> 12周学习计划 | 6/3-8/23 | [`learning/LEARNING-PLAN.md`](./learning/LEARNING-PLAN.md) | [`learning/PROGRESS.md`](./learning/PROGRESS.md)
 
 ## 项目上下文
 - **项目：** 简易用户管理 API 测试平台（Flask + pytest + JMeter + CI/CD）
 - **用户：** 大二软件技术，2026年底实习，目标是初级测试工程师
-- **当前进度：** 第2周第1天（6/8周一），等价类深入
+- **当前进度：** 第4周（6/25），Linux 实操/部署 57%
 - **关键原则：** AI辅助但不替代思考；所有产出落地到本项目；每天 commit
 
 ## 高频操作
