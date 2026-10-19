@@ -2,7 +2,7 @@
 
 ![API Tests](https://github.com/LUO093526/testing-portfolio/actions/workflows/test.yml/badge.svg)
 
-> 12周测试工程师学习计划配套实战项目 | 2026.06 — 2026.08
+> 测试工程师实战项目 | 2026.06 — 2026.08
 
 ## 项目简介
 
@@ -13,7 +13,7 @@
 | 层次 | 技术 | 说明 |
 |------|------|------|
 | 被测系统 | Python Flask 3.x | 自建 REST API 服务 |
-| 接口自动化 | pytest 9.0 + requests | 50+ 条自动化测试用例 |
+| 接口自动化 | pytest 9.0 + requests | 87 条自动化测试用例 |
 | Web 自动化 | Selenium + pytest | 后台管理 UI 测试 |
 | 性能测试 | JMeter 5.6 | CSV 参数化压测 + 混合场景 |
 | 测试报告 | pytest-html + Allure | 可视化报告 |
@@ -30,14 +30,14 @@ testing-portfolio/
 │   ├── conftest.py         # 全局 fixture + 测试数据
 │   ├── test_api.py         # 接口自动化用例
 │   └── test_login_pytest.py # Web UI 用例
-├── data/                   # 测试数据文件
-│   └── test_data.xlsx      # Excel 数据驱动
-├── docs/                   # 文档
-│   ├── api-spec.md         # 接口说明
-│   ├── testcase-table.md   # 用例总表
-│   ├── equivalent-class-analysis.md
-│   ├── boundary-value-analysis.md
-│   └── orthogonal-analysis.md
+├── data/                   # 测试数据（第5周接入 Excel 数据驱动）
+├── docs/                   # 测试设计与部署文档
+│   ├── testcase-table.md          # 用例总表
+│   ├── equivalent-class-analysis.md  # 等价类分析
+│   ├── boundary-value-analysis.md    # 边界值分析
+│   ├── orthogonal-analysis.md        # 正交分析
+│   ├── deployment-guide.md           # Nginx 部署指南
+│   └── nginx-flask*.conf             # 反代配置（基础 + 增强）
 ├── jmeter_script/          # JMeter 脚本 + 压测报告
 ├── reports/                # 测试报告
 ├── logs/                   # 运行日志
@@ -72,20 +72,24 @@ pytest --alluredir=allure-results && allure serve .   # Allure 报告
 ./run.sh stop
 ```
 
-## 测试覆盖（累计 50+ 条）
+## 测试覆盖（87 条，pytest --collect-only 实测）
 
-| 类型 | 数量 | 方法 |
+| 分类（pytest marker） | 用例数 | 说明 |
 |------|------|------|
-| 功能测试 | 20+ | 等价类 + 边界值 |
-| 异常测试 | 15+ | 无效输入、token 异常 |
-| 边界值测试 | 10+ | 刚好等于/小于/大于 |
-| 正交组合 | 5+ | 多条件排列精简 |
-| 并发测试 | JMeter | CSV 参数化 100 用户 |
+| CRUD 增删改查 | 19 | 登录/注册/查询/修改/状态启停 |
+| 异常测试 | 12 | 无效输入、token 异常 |
+| 边界值测试 | 9 | 刚好等于/小于/大于 |
+| 冒烟测试 | 7 | 核心功能快速验证 |
+| Web UI（Selenium） | 7 | 后台管理界面 |
+| 慢用例/并发 | 2 | 大数据量场景 |
+| JMeter 并发 | 100 用户 | CSV 参数化压测 |
+
+> 用例间存在 marker 重叠（如某 CRUD 用例同时标记 smoke），合计 87 条以 pytest 收集为准。
 
 ## 学习路线
 
 ```
-第1周 ✅ 读懂代码 → 第2周 🔴 测试设计 → 第3周 pytest深入 → 第4周 Linux实操
+第1周 ✅ 读懂代码 → 第2周 ✅ 测试设计 → 第3周 ✅ pytest深入 → 第4周 🔴 Linux实操（57%）
 → 第5-6周 API深度 → 第7-8周 JMeter深入 → 第9-10周 CI/CD → 第11-12周 求职
 ```
 
@@ -95,11 +99,11 @@ pytest --alluredir=allure-results && allure serve .   # Allure 报告
 
 | 指标 | 当前 | 目标 |
 |------|------|------|
-| API 测试用例 | 20 | 50+ |
-| GitHub Commits | 3 | 60+ |
-| 学习笔记 | 4 | 40+ |
-| 连续打卡 | 4 天 | 84 天 |
+| API 测试用例 | 87 | 50+ ✅ 已超额 |
+| GitHub Commits | 60 | 60+ ✅ 达成 |
+| 学习笔记 | 25 | 40+ |
+| 连续打卡 | 18 天 | 84 天 |
 
 ---
 
-> 🤖 本项目全程使用 Claude Code 辅助学习：AI = 导师 → 副驾驶 → 协作者
+> 📌 独立完成的测试工程师实战项目，覆盖接口测试、Web 自动化、性能测试与 CI/CD 全链路（开发过程使用 AI 工具辅助提效）。
